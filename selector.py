@@ -1,5 +1,5 @@
 import os
-from tkinter import Tk, Button, Canvas, Scrollbar, HORIZONTAL, VERTICAL, LEFT, RIGHT, BOTTOM, Frame, Label
+from tkinter import Tk, Button, Canvas, Frame, Label
 from tkinter import filedialog
 from PIL import Image, ImageTk
 
