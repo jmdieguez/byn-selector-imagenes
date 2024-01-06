@@ -1,4 +1,4 @@
-name: Build Windows Executable
+name: Build and Release
 
 on:
   push:
@@ -26,9 +26,51 @@ jobs:
     - name: Build Windows Executable
       run: pyinstaller --onefile selector.py
 
+  create_release:
+    runs-on: ubuntu-latest
+
+    needs: build
+
+    steps:
+    - name: Set up Git
+      uses: actions/setup-git@v2
+
+    - name: Get the latest tag name or use a default value
+      id: get_tag
+      run: echo "::set-output name=TAG_NAME::$(git describe --tags --abbrev=0 || echo "v0.1.0")"
+
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
       with:
-        files: dist/*
-        token: ${{ secrets.GITHUB_TOKEN }}
+        tag_name: ${{ steps.get_tag.outputs.TAG_NAME }}
+        release_name: Release ${{ steps.get_tag.outputs.TAG_NAME }}
+        body: |
+          Release notes for ${{ steps.get_tag.outputs.TAG_NAME }}
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  upload_asset:
+    runs-on: ubuntu-latest
+
+    needs: create_release
+
+    steps:
+    - name: Set up Git
+      uses: actions/setup-git@v2
+
+    - name: Get the release ID
+      id: get_release
+      run: echo "::set-output name=RELEASE_ID::$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ steps.get_tag.outputs.TAG_NAME }}" | jq -r '.id')"
+
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      with:
+        asset_path: dist/*
+        asset_name: selector.exe
+        asset_content_type: application/octet-stream
+        release_id: ${{ steps.get_release.outputs.RELEASE_ID }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
