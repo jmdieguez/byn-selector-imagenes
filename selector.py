@@ -6,9 +6,6 @@ from PIL import Image, ImageTk
 
 class ImageViewer:
     def __init__(self, root):
-
-        self.check_image = ImageTk.PhotoImage(Image.open("check.png"))
-
         self.root = root
         self.root.title("Image Viewer")
         self.width = int(root.winfo_screenwidth() * 0.8)
